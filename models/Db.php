@@ -13,19 +13,18 @@ class Db {
 	);
 
 	// Připojí se k databázi pomocí daných údajů
-  public static function pripoj($server, $user, $password, $database)
-  {
+  public static function connect($server, $user, $password, $database) {
 	  if (!isset(self::$connection)) 
       {
-        $dsn = "mysql:host=$server;dbname=$databaze;charset=utf8";
-			 self::$connection = new PDO(
-				$dsn,
-				$user,
-				$password,
-				self::$settings
-			 );
+        $dsn = "mysql:host=$server;dbname=$database;charset=utf8";
+		self::$connection = new PDO(
+			$dsn,
+			$user,
+			$password,
+			self::$settings
+		);
 	  }
-	}
+}
 	
 	// Spustí dotaz a vrátí z něj první řádek
   public static function queryOne($query, $parametres = array()) {
@@ -43,21 +42,19 @@ class Db {
 	
 	// Spustí dotaz a vrátí z něj první sloupec prvního řádku
   public static function dotazSamotny($query, $parametres = []) {
-		$result = self::dotazJeden($query, $parametres);
+		$result = self::queryOne($query, $parametres);
 		return $result[0];
 	}
 	
 	// Spustí dotaz a vrátí počet ovlivněných řádků
-	public static function dotaz($query, $parametres = array()) {
+	public static function query($query, $parametres = array()) {
 		$stmt = self::$connection->prepare($query);
 		$stmt->execute($parametres);
 		return $stmt->rowCount();
 	}
-	
-	
-	// Vloží do tabulky nový řádek jako data z asociativního pole
+
 	public static function insert($table, $parametres = array()) {
-		return self::dotaz("INSERT INTO $table (".
+		return self::query("INSERT INTO $table (".
 		implode(', ', array_keys($parametres)).
 		") VALUES (".str_repeat('?,', sizeOf($parametres)-1)."?)",
 			array_values($parametres));
@@ -65,7 +62,7 @@ class Db {
 	
 	// Změní řádek v tabulce tak, aby obsahoval data z asociativního pole
 	public static function change($table, $values = array(), $condition, $parametres = array()) {
-		return self::dotaz("UPDATE $table SET ".
+		return self::query("UPDATE $table SET ".
 		implode(' = ?, ', array_keys($values)).
 		" = ? " . $condition,
 		array_merge(array_values($values), $parametres));
